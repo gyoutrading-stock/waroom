@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <title>GIYONO AI - WAR ROOM v5.0</title>
+    <meta name="description" content="Terminal Analisa Saham Real-Time & Bandarmologi AI">
+    <meta property="og:title" content="GIYONO AI - WAR ROOM">
+    <meta property="og:image" content="https://i.ibb.co.id/X54P49y/giyono-gold-bull.png"> <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary_large_image">
+
+    <link rel="icon" type="image/png" href="https://i.ibb.co.id/X54P49y/giyono-gold-bull.png">
+    <link rel="apple-touch-icon" href="https://i.ibb.co.id/X54P49y/giyono-gold-bull.png">
+
+    <style>
+        :root { --neon-green: #0f0; --gold: #ff0; --bg: #000; }
+        body { background: var(--bg); color: #eee; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; }
+        .wrapper { display: flex; flex-direction: column; height: 100vh; }
+        
+        /* HEADER (STICKY) */
+        .header { background: #111; padding: 15px; border-bottom: 2px solid var(--neon-green); text-align: center; position: sticky; top: 0; z-index: 100; }
+        .input-group { display: flex; gap: 5px; justify-content: center; align-items: center; margin-bottom: 5px; }
+        .ticker-input { background: #222; border: 1px solid var(--neon-green); color: var(--neon-green); padding: 10px; font-size: 24px; font-weight: bold; width: 150px; text-align: center; text-transform: uppercase; outline: none; }
+        
+        /* PRICE */
+        .price-box { font-size: 50px; color: var(--gold); font-weight: bold; margin: 10px 0; text-shadow: 0 0 10px rgba(255, 255, 0, 0.3); }
+        
+        /* MAIN AREA (2-Grid) */
+        .main-content { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; flex-grow: 1; padding: 5px; }
+        .chart-box { border: 1px solid #333; height: 400px; }
+        iframe { width: 100%; height: 100%; border: none; }
+
+        /* AI REPORT (BOTTOM) */
+        #ai-report { grid-column: span 2; background: #050505; color: var(--neon-green); padding: 15px; font-family: monospace; font-size: 13px; border: 1px solid #222; margin-top: 10px; min-height: 80px; }
+
+        @media (max-width: 768px) {
+            .main-content { grid-template-columns: 1fr; }
+            #ai-report { grid-column: span 1; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="wrapper">
+        <div class="header">
+            <div style="font-size: 10px; color: #888; margin-bottom: 5px;">GIYONO AI SERVER v5.0 (GITHUB-POWERED)</div>
+            <div class="input-group">
+                <input type="text" id="symbol" class="ticker-input" value="ASRI" onkeyup="if(event.keyCode==13) sync()">
+            </div>
+            <div id="price" class="price-box">LOADING...</div>
+        </div>
+
+        <div class="main-content">
+            <div class="chart-box" id="c1"></div>
+            <div class="chart-box" id="c2"></div>
+            
+            <div id="ai-report">MENGANALISA HARGA RIEL...</div>
+        </div>
+    </div>
+
+    <script src="https://s3.tradingview.com/tv.js"></script>
+    <script>
+        // GANTI INI dengan URL Web App Google Script Anda (Yang berakhiran /exec)
+        const GAS_BACKEND_URL = https://script.google.com/macros/s/AKfycbyxPeP-Uz2uzT4tvMZcSbbQpYnybGv41prUCvST1JPOtaoWGAlb7NYIUJLnyR8v5Zjk/exec";
+
+        function loadChart(id, sym) {
+            let ticker = (sym === "IHSG") ? "IDX:COMPOSITE" : "IDX:" + sym;
+            new TradingView.widget({
+                "autosize": true, "symbol": ticker, "interval": "D", "theme": "dark", "style": "1", 
+                "hide_side_toolbar": true, "container_id": id, "timezone": "Asia/Jakarta"
+            });
+        }
+
+        async function sync() {
+            const sym = document.getElementById('symbol').value.toUpperCase();
+            
+            // 1. Load Charts (TradingView) - Ini Langsung Jalan
+            loadChart("c1", sym);
+            loadChart("c2", "IHSG");
+            
+            // Reset Tampilan Data
+            document.getElementById('price').innerText = "LOADING...";
+            document.getElementById('ai-report').innerText = "MENUNGGU DATA RIEL DARI GIYONO AI SERVER...";
+
+            // 2. Memanggil Backend GAS untuk Harga Riel & AI
+            try {
+                // Gunakan GAS untuk bypass CORS dan mengambil data Yahoo
+                const response = await fetch(`${GAS_BACKEND_URL}?symbol=${sym}`);
+                const data = await response.json();
+
+                if (data.error) {
+                    document.getElementById('price').innerText = "FAILED";
+                    document.getElementById('ai-report').innerText = data.error;
+                } else {
+                    // Update Harga Riel
+                    document.getElementById('price').innerText = data.price;
+                    // Update Analisis AI
+                    document.getElementById('ai-report').innerHTML = data.aiAnalysis;
+                }
+            } catch (error) {
+                document.getElementById('price').innerText = "OFFLINE";
+                document.getElementById('ai-report').innerText = "Gagal terhubung ke Backend GAS. Pastikan GAS_BACKEND_URL benar.";
+            }
+        }
+
+        window.onload = sync;
+    </script>
+</body>
+</html>
