@@ -60,13 +60,13 @@
 
 <script src="https://s3.tradingview.com/tv.js"></script>
 <script>
-    // ✅ FIX: URL HARUS PAKAI TANDA KUTIP
-    const GAS_BACKEND_URL = "https://script.google.com/macros/s/AKfycbxWILmP_U6EPZnKizvyH-mGmT_UTuT3KEt48qoGDALBHH8ONauBCxIBEO8jOxp1sOMr/exec";
+    // ✅ FINAL URL (SUDAH SESUAI DENGAN YANG ANDA KIRIM)
+    const GAS_BACKEND_URL = "https://script.google.com/macros/s/AKfycbzxM1DTLC9y0L_gsGuQyJfxu9ClVeXbDCQvPaFInrDaLJJz4W_H2cT1BKp_Ni4uf8h7/exec";
 
     function loadChart(id, sym) {
         let ticker = (sym === "IHSG") ? "IDX:COMPOSITE" : "IDX:" + sym;
 
-        // ✅ FIX: clear container biar tidak numpuk
+        // Clear container biar tidak numpuk
         document.getElementById(id).innerHTML = "";
 
         new TradingView.widget({
@@ -84,7 +84,7 @@
     async function sync() {
         const sym = document.getElementById('symbol').value.toUpperCase();
 
-        // Load Charts
+        // Load chart
         loadChart("c1", sym);
         loadChart("c2", "IHSG");
 
@@ -100,12 +100,12 @@
                 document.getElementById('price').innerText = "FAILED";
                 document.getElementById('ai-report').innerText = data.error;
             } else {
-                document.getElementById('price').innerText = data.price;
-                document.getElementById('ai-report').innerHTML = data.aiAnalysis;
+                document.getElementById('price').innerText = data.price || "N/A";
+                document.getElementById('ai-report').innerHTML = data.aiAnalysis || "Tidak ada analisa.";
             }
         } catch (error) {
             document.getElementById('price').innerText = "OFFLINE";
-            document.getElementById('ai-report').innerText = "Gagal terhubung ke Backend GAS. Pastikan URL benar & sudah public.";
+            document.getElementById('ai-report').innerText = "Gagal terhubung ke Backend GAS.";
         }
     }
 
