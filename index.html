@@ -1,115 +1,132 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    
-    <title>GIYONO AI - WAR ROOM v5.0</title>
-    <meta name="description" content="Terminal Analisa Saham Real-Time & Bandarmologi AI">
-    <meta property="og:title" content="GIYONO AI - WAR ROOM">
-    <meta property="og:image" content="https://i.ibb.co.id/X54P49y/giyono-gold-bull.png">
-    <meta property="og:type" content="website">
-    <meta name="twitter:card" content="summary_large_image">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <link rel="icon" type="image/png" href="https://i.ibb.co.id/X54P49y/giyono-gold-bull.png">
-    <link rel="apple-touch-icon" href="https://i.ibb.co.id/X54P49y/giyono-gold-bull.png">
+<title>GIYONO AI - WAR ROOM v5 (GITHUB SYNC)</title>
 
-    <style>
-        :root { --neon-green: #0f0; --gold: #ff0; --bg: #000; }
-        body { background: var(--bg); color: #eee; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; }
-        .wrapper { display: flex; flex-direction: column; height: 100vh; }
-        
-        .header { background: #111; padding: 15px; border-bottom: 2px solid var(--neon-green); text-align: center; position: sticky; top: 0; z-index: 100; }
-        .input-group { display: flex; gap: 5px; justify-content: center; align-items: center; margin-bottom: 5px; }
-        .ticker-input { background: #222; border: 1px solid var(--neon-green); color: var(--neon-green); padding: 10px; font-size: 24px; font-weight: bold; width: 150px; text-align: center; text-transform: uppercase; outline: none; }
-        
-        .price-box { font-size: 50px; color: var(--gold); font-weight: bold; margin: 10px 0; text-shadow: 0 0 10px rgba(255, 255, 0, 0.3); }
-        
-        .main-content { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; flex-grow: 1; padding: 5px; }
-        .chart-box { border: 1px solid #333; height: 400px; }
-        iframe { width: 100%; height: 100%; border: none; }
+<style>
+body { background:#000; color:#eee; font-family:sans-serif; margin:0; }
+.wrapper { display:flex; flex-direction:column; height:100vh; }
 
-        #ai-report { grid-column: span 2; background: #050505; color: var(--neon-green); padding: 15px; font-family: monospace; font-size: 13px; border: 1px solid #222; margin-top: 10px; min-height: 80px; }
+.header { padding:15px; background:#111; border-bottom:2px solid #0f0; text-align:center; }
+input {
+    background:#000;
+    border:1px solid #0f0;
+    color:#0f0;
+    font-size:22px;
+    text-align:center;
+    padding:10px;
+}
 
-        @media (max-width: 768px) {
-            .main-content { grid-template-columns: 1fr; }
-            #ai-report { grid-column: span 1; }
-        }
-    </style>
+#price {
+    font-size:48px;
+    color:#ff0;
+    margin-top:10px;
+}
+
+.main {
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:5px;
+    padding:5px;
+    flex-grow:1;
+}
+
+.chart { height:350px; border:1px solid #333; }
+
+#ai {
+    grid-column:span 2;
+    background:#050505;
+    color:#0f0;
+    padding:10px;
+    font-family:monospace;
+    font-size:13px;
+}
+</style>
 </head>
+
 <body>
 
 <div class="wrapper">
-    <div class="header">
-        <div style="font-size: 10px; color: #888; margin-bottom: 5px;">
-            GIYONO AI SERVER v5.0 (GITHUB-POWERED)
-        </div>
-        <div class="input-group">
-            <input type="text" id="symbol" class="ticker-input" value="ASRI"
-                onkeyup="if(event.keyCode==13) sync()">
-        </div>
-        <div id="price" class="price-box">LOADING...</div>
-    </div>
 
-    <div class="main-content">
-        <div class="chart-box" id="c1"></div>
-        <div class="chart-box" id="c2"></div>
-        <div id="ai-report">MENGANALISA HARGA RIEL...</div>
-    </div>
+<div class="header">
+    <input id="sym" value="ASRI" onkeyup="if(event.keyCode==13) run()">
+    <div id="price">LOADING...</div>
+</div>
+
+<div class="main">
+    <div id="c1" class="chart"></div>
+    <div id="c2" class="chart"></div>
+    <div id="ai">MENUNGGU DATA...</div>
+</div>
+
 </div>
 
 <script src="https://s3.tradingview.com/tv.js"></script>
+
 <script>
-    // ✅ FINAL URL (SUDAH SESUAI DENGAN YANG ANDA KIRIM)
-    const GAS_BACKEND_URL = "https://script.google.com/macros/s/AKfycbyhqa5AePjsnFpf9zFFzl8oVlhJlUi_V8mwtNmueV5XK1gRfRhk350thq5Ywi1tTIFm/exec";
 
-    function loadChart(id, sym) {
-        let ticker = (sym === "IHSG") ? "IDX:COMPOSITE" : "IDX:" + sym;
+// 🔥 PASTE URL GAS ANDA DI SINI
+const GAS = "https://script.google.com/macros/s/AKfycbzxM1DTLC9y0L_gsGuQyJfxu9ClVeXbDCQvPaFInrDaLJJz4W_H2cT1BKp_Ni4uf8h7/exec";
 
-        // Clear container biar tidak numpuk
-        document.getElementById(id).innerHTML = "";
+function chart(id, s){
+    document.getElementById(id).innerHTML="";
+    new TradingView.widget({
+        autosize:true,
+        symbol:(s=="IHSG")?"IDX:COMPOSITE":"IDX:"+s,
+        interval:"D",
+        theme:"dark",
+        style:"1",
+        container_id:id
+    });
+}
 
-        new TradingView.widget({
-            autosize: true,
-            symbol: ticker,
-            interval: "D",
-            theme: "dark",
-            style: "1",
-            hide_side_toolbar: true,
-            container_id: id,
-            timezone: "Asia/Jakarta"
-        });
-    }
+async function run(){
 
-    async function sync() {
-        const sym = document.getElementById('symbol').value.toUpperCase();
+    const s = document.getElementById("sym").value.toUpperCase();
 
-        // Load chart
-        loadChart("c1", sym);
-        loadChart("c2", "IHSG");
+    // load chart
+    chart("c1", s);
+    chart("c2", "IHSG");
 
-        // Reset UI
-        document.getElementById('price').innerText = "LOADING...";
-        document.getElementById('ai-report').innerText = "MENUNGGU DATA RIEL DARI GIYONO AI SERVER...";
+    document.getElementById("price").innerText="LOADING...";
+    document.getElementById("ai").innerText="AMBIL DATA...";
 
-        try {
-            const response = await fetch(`${GAS_BACKEND_URL}?symbol=${sym}`);
-            const data = await response.json();
+    try{
 
-            if (data.error) {
-                document.getElementById('price').innerText = "FAILED";
-                document.getElementById('ai-report').innerText = data.error;
-            } else {
-                document.getElementById('price').innerText = data.price || "N/A";
-                document.getElementById('ai-report').innerHTML = data.aiAnalysis || "Tidak ada analisa.";
-            }
-        } catch (error) {
-            document.getElementById('price').innerText = "OFFLINE";
-            document.getElementById('ai-report').innerText = "Gagal terhubung ke Backend GAS.";
+        // 🔥 AMBIL HARGA REAL (YAHOO)
+        const r = await fetch(
+            "https://api.allorigins.win/get?url=" +
+            encodeURIComponent("https://query1.finance.yahoo.com/v8/finance/chart/"+s+".JK?interval=1m&range=1d")
+        );
+
+        const j = await r.json();
+        const meta = JSON.parse(j.contents).chart.result[0].meta;
+        const price = meta.regularMarketPrice;
+
+        document.getElementById("price").innerText = price;
+
+        // 🔥 KIRIM KE GAS (INI KUNCI)
+        const ai = await fetch(`${GAS}?exec=true&symbol=${s}&price=${price}`);
+        const data = await ai.json();
+
+        if(data.choices){
+            document.getElementById("ai").innerHTML =
+                data.choices[0].message.content.replace(/\n/g,"<br>");
+        }else{
+            document.getElementById("ai").innerText="AI RESPONSE TIDAK VALID";
         }
-    }
 
-    window.onload = sync;
+    }catch(e){
+        document.getElementById("price").innerText="OFFLINE";
+        document.getElementById("ai").innerText="ERROR: "+e.message;
+    }
+}
+
+window.onload = run;
+
 </script>
 
 </body>
